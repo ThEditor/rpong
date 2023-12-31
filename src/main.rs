@@ -13,6 +13,16 @@ void main()
 }
 "#;
 
+const FRAGMENT_SHADER_SOURCE: &str = r#"
+#version 330 core
+out vec4 FragColor;
+
+void main()
+{
+    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+} 
+"#;
+
 fn main() {
     let mut glfw = glfw::init(glfw::fail_on_errors).unwrap();
 
@@ -57,6 +67,30 @@ fn main() {
             let mut info_log: Vec<u8> = Vec::with_capacity(512);
             info_log.set_len(511);
             gl::GetShaderInfoLog(vertex_shader, 512, std::ptr::null_mut(), info_log.as_mut_ptr() as *mut i8);
+
+            let info_log_str = String::from_utf8_lossy(&info_log);
+            println!("{}", info_log_str);
+        }
+    }
+
+    // compiling fragment shaders
+    
+    let fragment_shader_source = std::ffi::CString::new(FRAGMENT_SHADER_SOURCE).expect("CString::new failed");
+    let fragment_shader: u32;
+    
+    unsafe {
+        fragment_shader = gl::CreateShader(gl::FRAGMENT_SHADER);
+        gl::ShaderSource(fragment_shader, 1, &fragment_shader_source.as_ptr(), std::ptr::null());
+        gl::CompileShader(fragment_shader);
+
+        let mut success: i32 = 0;
+        gl::GetShaderiv(fragment_shader, gl::COMPILE_STATUS, &mut success);
+        if success == 0 {
+            println!("ERROR::SHADER::FRAGMENT::COMPILATION_FAILED");
+
+            let mut info_log: Vec<u8> = Vec::with_capacity(512);
+            info_log.set_len(511);
+            gl::GetShaderInfoLog(fragment_shader, 512, std::ptr::null_mut(), info_log.as_mut_ptr() as *mut i8);
 
             let info_log_str = String::from_utf8_lossy(&info_log);
             println!("{}", info_log_str);
