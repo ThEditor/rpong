@@ -3,6 +3,16 @@ extern crate gl;
 
 use glfw::{Action, Context, Key};
 
+const VERTEX_SHADER_SOURCE: &str = r#"   
+#version 330 core
+layout (location = 0) in vec3 aPos;
+
+void main()
+{
+    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+}
+"#;
+
 fn main() {
     let mut glfw = glfw::init(glfw::fail_on_errors).unwrap();
 
@@ -14,43 +24,59 @@ fn main() {
     
     gl::load_with(|s| window.get_proc_address(s) as *const _);
 
-    let mut colors = [1.0, 1.0, 1.0, 1.0];
+    // defining vertices
+
+    let vertices: [f32; 9] = [
+        -0.5, -0.5, 0.0,
+        0.5, -0.5, 0.0,
+        0.0,  0.5, 0.0
+    ];
+
+    let mut vbo: u32 = 0;
+    unsafe { 
+        gl::GenBuffers(1, &mut vbo);
+        gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
+        gl::BufferData(gl::ARRAY_BUFFER, (vertices.len() * std::mem::size_of::<f32>()) as isize, vertices.as_ptr() as *const std::ffi::c_void, gl::STATIC_DRAW);
+    };
+
+    // compiling vertex shaders
+
+    let vertex_shader_source = std::ffi::CString::new(VERTEX_SHADER_SOURCE).expect("CString::new failed");
+    let vertex_shader: u32;
+
+    unsafe {
+        vertex_shader = gl::CreateShader(gl::VERTEX_SHADER);
+        gl::ShaderSource(vertex_shader, 1, &vertex_shader_source.as_ptr(), std::ptr::null());
+        gl::CompileShader(vertex_shader);
+
+        let mut success: i32 = 0;
+        gl::GetShaderiv(vertex_shader, gl::COMPILE_STATUS, &mut success);
+        if success == 0 {
+            println!("ERROR::SHADER::VERTEX::COMPILATION_FAILED");
+
+            let mut info_log: Vec<u8> = Vec::with_capacity(512);
+            info_log.set_len(511);
+            gl::GetShaderInfoLog(vertex_shader, 512, std::ptr::null_mut(), info_log.as_mut_ptr() as *mut i8);
+
+            let info_log_str = String::from_utf8_lossy(&info_log);
+            println!("{}", info_log_str);
+        }
+    }
 
     while !window.should_close() {
-        unsafe {
-            gl::ClearColor(colors[0], colors[1], colors[2], colors[3]);
-            gl::Clear(gl::COLOR_BUFFER_BIT);
-        }
-
         window.swap_buffers();
 
         glfw.poll_events();
         for (_, event) in glfw::flush_messages(&events) {
-            handle_window_event(&mut window, event, &mut colors);
+            handle_window_event(&mut window, event);
         }
     }
 }
 
-fn handle_window_event(window: &mut glfw::Window, event: glfw::WindowEvent, colors: &mut [f32; 4]) {
+fn handle_window_event(window: &mut glfw::Window, event: glfw::WindowEvent) {
     match event {
         glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => {
             window.set_should_close(true)
-        }
-        glfw::WindowEvent::Key(Key::W, _, Action::Press, _) => {
-            *colors = [1.0, 0.0, 0.0, 1.0];
-            println!("Red");
-        }
-        glfw::WindowEvent::Key(Key::A, _, Action::Press, _) => {
-            *colors = [0.0, 1.0, 0.0, 1.0];
-            println!("Green");
-        }
-        glfw::WindowEvent::Key(Key::S, _, Action::Press, _) => {
-            *colors = [0.0, 0.0, 1.0, 1.0];
-            println!("Blue");
-        }
-        glfw::WindowEvent::Key(Key::D, _, Action::Press, _) => {
-            *colors = [1.0, 1.0, 0.0, 1.0];
-            println!("Yellow");
         }
         _ => {}
     }
