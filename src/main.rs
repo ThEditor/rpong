@@ -97,6 +97,36 @@ fn main() {
         }
     }
 
+    // linking shader program
+
+    let shader_program;
+    unsafe {
+        shader_program = gl::CreateProgram();
+        gl::AttachShader(shader_program, vertex_shader);
+        gl::AttachShader(shader_program, fragment_shader);
+        gl::LinkProgram(shader_program);
+
+        let mut success: i32 = 0;
+        gl::GetProgramiv(shader_program, gl::LINK_STATUS, &mut success);
+        if success == 0 {
+            println!("ERROR::PROGRAM::LINK_FAILED");
+
+            let mut info_log: Vec<u8> = Vec::with_capacity(512);
+            info_log.set_len(511);
+            gl::GetProgramInfoLog(shader_program, 512, std::ptr::null_mut(), info_log.as_mut_ptr() as *mut i8);
+
+            let info_log_str = String::from_utf8_lossy(&info_log);
+            println!("{}", info_log_str);
+        }
+
+        gl::UseProgram(shader_program);
+        gl::DeleteShader(vertex_shader);
+        gl::DeleteShader(fragment_shader);
+
+        gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, 3 * std::mem::size_of::<f32>() as gl::types::GLint, std::ptr::null());
+        gl::EnableVertexAttribArray(0);
+    }
+
     while !window.should_close() {
         window.swap_buffers();
 
