@@ -34,21 +34,6 @@ fn main() {
     
     gl::load_with(|s| window.get_proc_address(s) as *const _);
 
-    // defining vertices
-
-    let vertices: [f32; 9] = [
-        -0.5, -0.5, 0.0,
-        0.5, -0.5, 0.0,
-        0.0,  0.5, 0.0
-    ];
-
-    let mut vbo: u32 = 0;
-    unsafe { 
-        gl::GenBuffers(1, &mut vbo);
-        gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
-        gl::BufferData(gl::ARRAY_BUFFER, (vertices.len() * std::mem::size_of::<f32>()) as isize, vertices.as_ptr() as *const std::ffi::c_void, gl::STATIC_DRAW);
-    };
-
     // compiling vertex shaders
 
     let vertex_shader_source = std::ffi::CString::new(VERTEX_SHADER_SOURCE).expect("CString::new failed");
@@ -109,7 +94,7 @@ fn main() {
         let mut success: i32 = 0;
         gl::GetProgramiv(shader_program, gl::LINK_STATUS, &mut success);
         if success == 0 {
-            println!("ERROR::PROGRAM::LINK_FAILED");
+            println!("ERROR::SHADER::PROGRAM::LINKING_FAILED");
 
             let mut info_log: Vec<u8> = Vec::with_capacity(512);
             info_log.set_len(511);
@@ -119,15 +104,55 @@ fn main() {
             println!("{}", info_log_str);
         }
 
-        gl::UseProgram(shader_program);
         gl::DeleteShader(vertex_shader);
         gl::DeleteShader(fragment_shader);
+    }
+
+    // defining vertices
+
+    let vertices: [f32; 9] = [
+        -0.5, -0.5, 0.0,
+        0.5, -0.5, 0.0,
+        0.0,  0.5, 0.0
+    ];
+
+    // bind vertex array object
+
+    let mut vao: u32 = 0;
+    unsafe { 
+        gl::GenVertexArrays(1, &mut vao);
+        gl::BindVertexArray(vao);
+    }
+
+    let mut vbo: u32 = 0;
+    unsafe { 
+        gl::GenBuffers(1, &mut vbo);
+        gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
+        gl::BufferData(gl::ARRAY_BUFFER, (vertices.len() * std::mem::size_of::<f32>()) as isize, vertices.as_ptr() as *const std::ffi::c_void, gl::STATIC_DRAW);
 
         gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, 3 * std::mem::size_of::<f32>() as gl::types::GLint, std::ptr::null());
         gl::EnableVertexAttribArray(0);
+    };
+
+    // unbind
+    unsafe {
+        gl::BindBuffer(gl::ARRAY_BUFFER, 0);
+        gl::BindVertexArray(0);
     }
 
     while !window.should_close() {
+        unsafe {
+            gl::ClearColor(0.2, 0.3, 0.3, 1.0);
+            gl::Clear(gl::COLOR_BUFFER_BIT);
+
+
+            // draw triangle
+            gl::UseProgram(shader_program);
+            gl::BindVertexArray(vao);
+            gl::DrawArrays(gl::TRIANGLES, 0, 3);
+            gl::BindVertexArray(0);
+        }
+
         window.swap_buffers();
 
         glfw.poll_events();
