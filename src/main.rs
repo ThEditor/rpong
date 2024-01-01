@@ -110,10 +110,16 @@ fn main() {
 
     // defining vertices
 
-    let vertices: [f32; 9] = [
-        -0.5, -0.5, 0.0,
+    let vertices: [f32; 12] = [
+        0.5, 0.5, 0.0,
         0.5, -0.5, 0.0,
-        0.0,  0.5, 0.0
+        -0.5,  -0.5, 0.0,
+        -0.5,  0.5, 0.0
+    ];
+
+    let indices = [
+        0, 1, 3,
+        1, 2, 3
     ];
 
     // bind vertex array object
@@ -130,9 +136,19 @@ fn main() {
         gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
         gl::BufferData(gl::ARRAY_BUFFER, (vertices.len() * std::mem::size_of::<f32>()) as isize, vertices.as_ptr() as *const std::ffi::c_void, gl::STATIC_DRAW);
 
+    };
+
+    let mut ebo: u32 = 0;
+    unsafe {
+        gl::GenBuffers(1, &mut ebo);
+        gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
+        gl::BufferData(gl::ELEMENT_ARRAY_BUFFER, (indices.len() * std::mem::size_of::<f32>()) as isize, indices.as_ptr() as *const std::ffi::c_void, gl::STATIC_DRAW);
+    }
+
+    unsafe {
         gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, 3 * std::mem::size_of::<f32>() as gl::types::GLint, std::ptr::null());
         gl::EnableVertexAttribArray(0);
-    };
+    }
 
     // unbind
     unsafe {
@@ -149,7 +165,7 @@ fn main() {
             // draw triangle
             gl::UseProgram(shader_program);
             gl::BindVertexArray(vao);
-            gl::DrawArrays(gl::TRIANGLES, 0, 3);
+            gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, std::ptr::null());
             gl::BindVertexArray(0);
         }
 
@@ -166,6 +182,18 @@ fn handle_window_event(window: &mut glfw::Window, event: glfw::WindowEvent) {
     match event {
         glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => {
             window.set_should_close(true)
+        }
+        glfw::WindowEvent::Key(Key::L, _, Action::Press, _) => {
+            unsafe {
+                let mut polygon_mode: gl::types::GLint = 0;
+                gl::GetIntegerv(gl::POLYGON_MODE, &mut polygon_mode);
+                if polygon_mode == gl::FILL.try_into().unwrap() {
+                    gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
+                }
+                if polygon_mode == gl::LINE.try_into().unwrap() {
+                    gl::PolygonMode(gl::FRONT_AND_BACK, gl::FILL);
+                }
+            }
         }
         _ => {}
     }
