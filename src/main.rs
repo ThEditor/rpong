@@ -1,7 +1,7 @@
+use rpong::graphics::window::Window;
+
 extern crate glfw;
 extern crate gl;
-
-use glfw::{Action, Context, Key};
 
 const VERTEX_SHADER_SOURCE: &str = r#"   
 #version 330 core
@@ -24,15 +24,9 @@ void main()
 "#;
 
 fn main() {
-    let mut glfw = glfw::init(glfw::fail_on_errors).unwrap();
-
-    let (mut window, events) = glfw.create_window(300, 300, "Pong!", glfw::WindowMode::Windowed)
-        .expect("Failed to create GLFW window.");
-
-    window.set_key_polling(true);
-    window.make_current();
+    let mut window = Window::new();
     
-    gl::load_with(|s| window.get_proc_address(s) as *const _);
+    window.init_gl();
 
     // compiling vertex shaders
 
@@ -110,18 +104,16 @@ fn main() {
 
     // defining vertices
 
-    let vertices: [f32; 18] = [
-        0.1, 0.7, 0.0,
-        0.1, 0.1, 0.0,
-        0.7, 0.1, 0.0,
-        -0.1, 0.7, 0.0,
-        -0.7, 0.1, 0.0,
-        -0.1, 0.1, 0.0
+    let vertices: [f32; 12] = [
+        0.5, 0.5, 0.0,
+        0.5, -0.5, 0.0,
+        -0.5, -0.5, 0.0,
+        -0.5, 0.5, 0.0
     ];
 
     let indices = [
         0, 1, 2,
-        3, 4, 5
+        2, 3, 0
     ];
 
     // bind vertex array object
@@ -171,32 +163,6 @@ fn main() {
             gl::BindVertexArray(0);
         }
 
-        window.swap_buffers();
-
-        glfw.poll_events();
-        for (_, event) in glfw::flush_messages(&events) {
-            handle_window_event(&mut window, event);
-        }
-    }
-}
-
-fn handle_window_event(window: &mut glfw::Window, event: glfw::WindowEvent) {
-    match event {
-        glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => {
-            window.set_should_close(true)
-        }
-        glfw::WindowEvent::Key(Key::L, _, Action::Press, _) => {
-            unsafe {
-                let mut polygon_mode: gl::types::GLint = 0;
-                gl::GetIntegerv(gl::POLYGON_MODE, &mut polygon_mode);
-                if polygon_mode == gl::FILL.try_into().unwrap() {
-                    gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
-                }
-                if polygon_mode == gl::LINE.try_into().unwrap() {
-                    gl::PolygonMode(gl::FRONT_AND_BACK, gl::FILL);
-                }
-            }
-        }
-        _ => {}
+        window.update();
     }
 }
