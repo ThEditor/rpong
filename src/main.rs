@@ -1,4 +1,7 @@
-use rpong::graphics::window::Window;
+use std::{ptr, mem};
+
+use gl::types::GLint;
+use rpong::graphics::{window::Window, gl_wrapper::{VertexArrayObject, BufferObject, VertexAttribePointer}};
 
 extern crate glfw;
 extern crate gl;
@@ -116,39 +119,22 @@ fn main() {
         2, 3, 0
     ];
 
-    // bind vertex array object
+    let vao = VertexArrayObject::new();
+    vao.bind();
 
-    let mut vao: u32 = 0;
-    unsafe { 
-        gl::GenVertexArrays(1, &mut vao);
-        gl::BindVertexArray(vao);
-    }
+    let vbo = BufferObject::new(gl::ARRAY_BUFFER, gl::STATIC_DRAW);
+    vbo.bind();
+    vbo.store_f32_data(&vertices);
 
-    let mut vbo: u32 = 0;
-    unsafe { 
-        gl::GenBuffers(1, &mut vbo);
-        gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
-        gl::BufferData(gl::ARRAY_BUFFER, (vertices.len() * std::mem::size_of::<f32>()) as isize, vertices.as_ptr() as *const std::ffi::c_void, gl::STATIC_DRAW);
+    let ebo = BufferObject::new(gl::ELEMENT_ARRAY_BUFFER, gl::STATIC_DRAW);
+    ebo.bind();
+    ebo.store_i32_data(&indices);
 
-    };
+    let vap = VertexAttribePointer::new(0, 3, gl::FLOAT, gl::FALSE, 3 * mem::size_of::<f32>() as GLint, ptr::null());
+    vap.enable();
 
-    let mut ebo: u32 = 0;
-    unsafe {
-        gl::GenBuffers(1, &mut ebo);
-        gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
-        gl::BufferData(gl::ELEMENT_ARRAY_BUFFER, (indices.len() * std::mem::size_of::<f32>()) as isize, indices.as_ptr() as *const std::ffi::c_void, gl::STATIC_DRAW);
-    }
-
-    unsafe {
-        gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, 3 * std::mem::size_of::<f32>() as gl::types::GLint, std::ptr::null());
-        gl::EnableVertexAttribArray(0);
-    }
-
-    // unbind
-    unsafe {
-        gl::BindBuffer(gl::ARRAY_BUFFER, 0);
-        gl::BindVertexArray(0);
-    }
+    vbo.unbind();
+    vao.unbind();
 
     while !window.should_close() {
         unsafe {
@@ -158,9 +144,9 @@ fn main() {
 
             // draw triangle
             gl::UseProgram(shader_program);
-            gl::BindVertexArray(vao);
+            vao.bind();
             gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, std::ptr::null());
-            gl::BindVertexArray(0);
+            vao.unbind();
         }
 
         window.update();
