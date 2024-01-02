@@ -1,10 +1,13 @@
-use std::{ptr, mem};
+use std::{mem, ptr};
 
-use gl::types::GLint;
-use rpong::graphics::{window::Window, gl_wrapper::{VertexArrayObject, BufferObject, VertexAttribePointer}};
+use gl::types::{GLsizei, GLfloat};
+use rpong::graphics::{
+    gl_wrapper::{BufferObject, Color, VertexArrayObject, VertexAttribePointer},
+    window::Window,
+};
 
-extern crate glfw;
 extern crate gl;
+extern crate glfw;
 
 const VERTEX_SHADER_SOURCE: &str = r#"   
 #version 330 core
@@ -28,17 +31,23 @@ void main()
 
 fn main() {
     let mut window = Window::new();
-    
+
     window.init_gl();
 
     // compiling vertex shaders
 
-    let vertex_shader_source = std::ffi::CString::new(VERTEX_SHADER_SOURCE).expect("CString::new failed");
+    let vertex_shader_source =
+        std::ffi::CString::new(VERTEX_SHADER_SOURCE).expect("CString::new failed");
     let vertex_shader: u32;
 
     unsafe {
         vertex_shader = gl::CreateShader(gl::VERTEX_SHADER);
-        gl::ShaderSource(vertex_shader, 1, &vertex_shader_source.as_ptr(), std::ptr::null());
+        gl::ShaderSource(
+            vertex_shader,
+            1,
+            &vertex_shader_source.as_ptr(),
+            std::ptr::null(),
+        );
         gl::CompileShader(vertex_shader);
 
         let mut success: i32 = 0;
@@ -48,7 +57,12 @@ fn main() {
 
             let mut info_log: Vec<u8> = Vec::with_capacity(512);
             info_log.set_len(511);
-            gl::GetShaderInfoLog(vertex_shader, 512, std::ptr::null_mut(), info_log.as_mut_ptr() as *mut i8);
+            gl::GetShaderInfoLog(
+                vertex_shader,
+                512,
+                std::ptr::null_mut(),
+                info_log.as_mut_ptr() as *mut i8,
+            );
 
             let info_log_str = String::from_utf8_lossy(&info_log);
             println!("{}", info_log_str);
@@ -56,13 +70,19 @@ fn main() {
     }
 
     // compiling fragment shaders
-    
-    let fragment_shader_source = std::ffi::CString::new(FRAGMENT_SHADER_SOURCE).expect("CString::new failed");
+
+    let fragment_shader_source =
+        std::ffi::CString::new(FRAGMENT_SHADER_SOURCE).expect("CString::new failed");
     let fragment_shader: u32;
-    
+
     unsafe {
         fragment_shader = gl::CreateShader(gl::FRAGMENT_SHADER);
-        gl::ShaderSource(fragment_shader, 1, &fragment_shader_source.as_ptr(), std::ptr::null());
+        gl::ShaderSource(
+            fragment_shader,
+            1,
+            &fragment_shader_source.as_ptr(),
+            std::ptr::null(),
+        );
         gl::CompileShader(fragment_shader);
 
         let mut success: i32 = 0;
@@ -72,7 +92,12 @@ fn main() {
 
             let mut info_log: Vec<u8> = Vec::with_capacity(512);
             info_log.set_len(511);
-            gl::GetShaderInfoLog(fragment_shader, 512, std::ptr::null_mut(), info_log.as_mut_ptr() as *mut i8);
+            gl::GetShaderInfoLog(
+                fragment_shader,
+                512,
+                std::ptr::null_mut(),
+                info_log.as_mut_ptr() as *mut i8,
+            );
 
             let info_log_str = String::from_utf8_lossy(&info_log);
             println!("{}", info_log_str);
@@ -95,7 +120,12 @@ fn main() {
 
             let mut info_log: Vec<u8> = Vec::with_capacity(512);
             info_log.set_len(511);
-            gl::GetProgramInfoLog(shader_program, 512, std::ptr::null_mut(), info_log.as_mut_ptr() as *mut i8);
+            gl::GetProgramInfoLog(
+                shader_program,
+                512,
+                std::ptr::null_mut(),
+                info_log.as_mut_ptr() as *mut i8,
+            );
 
             let info_log_str = String::from_utf8_lossy(&info_log);
             println!("{}", info_log_str);
@@ -108,16 +138,10 @@ fn main() {
     // defining vertices
 
     let vertices: [f32; 12] = [
-        0.5, 0.5, 0.0,
-        0.5, -0.5, 0.0,
-        -0.5, -0.5, 0.0,
-        -0.5, 0.5, 0.0
+        0.5, 0.5, 0.0, 0.5, -0.5, 0.0, -0.5, -0.5, 0.0, -0.5, 0.5, 0.0,
     ];
 
-    let indices = [
-        0, 1, 2,
-        2, 3, 0
-    ];
+    let indices = [0, 1, 2, 2, 3, 0];
 
     let vao = VertexArrayObject::new();
     vao.bind();
@@ -130,18 +154,24 @@ fn main() {
     ebo.bind();
     ebo.store_i32_data(&indices);
 
-    let vap = VertexAttribePointer::new(0, 3, gl::FLOAT, gl::FALSE, 3 * mem::size_of::<f32>() as GLint, ptr::null());
+    let vap = VertexAttribePointer::new(
+        0,
+        3,
+        gl::FLOAT,
+        gl::FALSE,
+        3 * mem::size_of::<GLfloat>() as GLsizei,
+        ptr::null(),
+    );
     vap.enable();
 
     vbo.unbind();
     vao.unbind();
 
     while !window.should_close() {
+        Color::new(0.2, 0.3, 0.3, 1.0, gl::COLOR_BUFFER_BIT)
+            .clear();
+
         unsafe {
-            gl::ClearColor(0.2, 0.3, 0.3, 1.0);
-            gl::Clear(gl::COLOR_BUFFER_BIT);
-
-
             // draw triangle
             gl::UseProgram(shader_program);
             vao.bind();

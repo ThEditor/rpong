@@ -1,6 +1,6 @@
 use std::{os::raw::c_void, mem};
 
-use gl::types::{GLuint, GLenum, GLboolean, GLsizei};
+use gl::types::{GLuint, GLenum, GLboolean, GLsizei, GLfloat, GLbitfield};
 
 pub struct VertexArrayObject {
     id: GLuint,
@@ -102,6 +102,33 @@ impl VertexAttribePointer {
     pub fn disable(&self) {
         unsafe {
             gl::DisableVertexAttribArray(self.index);
+        }
+    }
+}
+
+pub struct Color {
+    red: GLfloat,
+    green: GLfloat,
+    blue: GLfloat,
+    alpha: GLfloat,
+    mask: GLbitfield,
+}
+
+impl Color {
+    pub fn new(red: GLfloat, green: GLfloat, blue: GLfloat, alpha: GLfloat, mask: GLbitfield) -> Color {
+        Color {
+            red,
+            green,
+            blue,
+            alpha,
+            mask
+        }
+    }
+
+    pub fn clear(&self) {
+        unsafe {
+            gl::ClearColor(self.red, self.green, self.blue, self.alpha);
+            gl::Clear(self.mask);
         }
     }
 }
