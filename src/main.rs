@@ -10,15 +10,18 @@ extern crate gl;
 extern crate glfw;
 
 const VERTEX_SHADER_PATH: &str = "src/shaders/vertex_shader.glsl";
+const VERTEX_SHADER_PATH2: &str = "src/shaders/vertex_shader2.glsl";
 
 const FRAGMENT_SHADER_PATH: &str = "src/shaders/fragment_shader.glsl";
+const FRAGMENT_SHADER_PATH2: &str = "src/shaders/fragment_shader2.glsl";
 
 fn main() {
     let mut window = Window::new();
 
     window.init_gl();
 
-    let shader_program = ShaderProgram::new(VERTEX_SHADER_PATH, FRAGMENT_SHADER_PATH);
+    let shader_program1 = ShaderProgram::new(VERTEX_SHADER_PATH, FRAGMENT_SHADER_PATH);
+    let shader_program2 = ShaderProgram::new(VERTEX_SHADER_PATH2, FRAGMENT_SHADER_PATH2);
 
     let vertices1: [f32; 9] = [
         0.5, 0.5, 0.0, 0.5, -0.5, 0.0, -0.5, -0.5, 0.0
@@ -84,12 +87,17 @@ fn main() {
         Color::new(0.2, 0.3, 0.3, 1.0, gl::COLOR_BUFFER_BIT)
             .clear();
 
-        shader_program.bind();
+        shader_program1.bind();
         vao1.bind();
         unsafe { gl::DrawElements(gl::TRIANGLES, 3, gl::UNSIGNED_INT, std::ptr::null()) };
+        vao1.unbind();
+        shader_program1.unbind();
+
+        shader_program2.bind();
         vao2.bind();
         unsafe { gl::DrawElements(gl::TRIANGLES, 3, gl::UNSIGNED_INT, std::ptr::null()) };
         vao2.unbind();
+        shader_program2.unbind();
 
         window.update();
     }
