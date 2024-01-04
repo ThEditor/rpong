@@ -1,10 +1,7 @@
 use std::{mem, ptr};
 
 use gl::types::{GLsizei, GLfloat};
-use rpong::graphics::{
-    gl_wrapper::{BufferObject, Color, VertexArrayObject, VertexAttribePointer, ShaderProgram},
-    window::Window,
-};
+use rpong::graphics::{window::Window, wrapper::{shader_program::ShaderProgram, vertex_array_object::VertexArrayObject, buffer_object::BufferObject, vertex_attribute_pointer::VertexAttributePointer, color::Color}};
 
 extern crate gl;
 extern crate glfw;
@@ -38,7 +35,7 @@ fn main() {
     ebo.bind();
     ebo.store_i32_data(&indices1);
 
-    let vap = VertexAttribePointer::new(
+    let vap = VertexAttributePointer::new(
         0,
         3,
         gl::FLOAT,
