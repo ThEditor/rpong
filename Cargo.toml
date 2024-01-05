@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 gl = "0.14.0"
+rusty-gl = { path = "../rusty-gl" }
 
 [dependencies.glfw]
 version = "*"

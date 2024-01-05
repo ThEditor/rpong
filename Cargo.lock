@@ -116,6 +116,14 @@ version = "0.1.0"
 dependencies = [
  "gl",
  "glfw",
+ "rusty-gl",
+]
+
+[[package]]
+name = "rusty-gl"
+version = "0.1.0"
+dependencies = [
+ "gl",
 ]
 
 [[package]]

@@ -1,7 +1,8 @@
 use std::{mem, ptr};
 
 use gl::types::{GLsizei, GLfloat};
-use rpong::graphics::{window::Window, wrapper::{shader_program::ShaderProgram, vertex_array_object::VertexArrayObject, buffer_object::BufferObject, vertex_attribute_pointer::VertexAttributePointer, color::Color}};
+use rpong::graphics::window::Window;
+use rusty_gl::{vertex_array_object::VertexArrayObject, buffer_object::BufferObject, vertex_attribute_pointer::VertexAttributePointer, color::Color, shader_program::ShaderProgram};
 
 extern crate gl;
 extern crate glfw;
